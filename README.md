@@ -52,7 +52,30 @@ Linuksa a nie standardowej biblioteki języka C (b) kopiowanie za każdym
 obudzeniem całego drzewa katalogów zostanie potraktowane jako poważny błąd</p>
 <br>
 <p>(c) podobnie jak przerzucenie części zadań na shell systemowy (funkcja system). </p>
+<br><hr>
 
+<h2>Projekt nr 1 – materiały pomocnicze</h2>
+<br>
+<p>a) literatura</p>
+1. R. Love – „Linux. Programowanie systemowe”
+2. M. Mitchell – „Linux. Programowanie dla zaawansowanych”
+<br>
+<p>b) przydatne funkcje</p>
+fork(), setsid(), chdir(), exit(), signal(), kill(), openlog(), syslog(), closelog(),
+open(), read(), write(), close(), lseek(), mmap(), memcpy(), munmap(), strcmp(),
+strcpy(), strcat(), strtoul(), strstr(), strlen(), atoi(), stat(), opendir(), readdir(),
+closedir(), rewinddir(), remove(), unlink(), rmdir(), mkdir(), chmod(), access(),
+sleep()
+<br>
+<p>c) użyteczne struktury i typy</p>
+struct stat, struct dirent, DIR, mode_t, off_t, time_t
+<br>
+<p>d) wysyłanie sygnałów</p>
+Sygnał można wysłać za pomocą wywołania systemowego kill lub polecenia kill
+i podając żądany pid procesu.
+<br>
+<p>e) inne</p>
+argumenty funkcji main() 
 
 
 
