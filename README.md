@@ -36,7 +36,7 @@ informacja o każdej akcji typu uśpienie/obudzenie się demona (naturalne lub w
 wyniku sygnału), wykonanie kopii lub usunięcie pliku jest przesłana do logu
 systemowego. Informacja ta powinna zawierać aktualną datę.</p>
 <br><br><hr>
-<p>Dodatkowo:</p>
+<p style="font-weight:500;">Dodatkowo:</p>
 <br>
 <p>a) [10p.] Dodatkowa opcja -R pozwalająca na rekurencyjną synchronizację
 katalogów (teraz pozycje będące katalogami nie są ignorowane). W szczególności
