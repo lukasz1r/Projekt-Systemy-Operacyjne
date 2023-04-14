@@ -57,25 +57,27 @@ obudzeniem całego drzewa katalogów zostanie potraktowane jako poważny błąd<
 <h2>Projekt nr 1 – materiały pomocnicze</h2>
 <br>
 <p>a) literatura</p>
-1. R. Love – „Linux. Programowanie systemowe”
-2. M. Mitchell – „Linux. Programowanie dla zaawansowanych”
+<ol>
+<li>R. Love – „Linux. Programowanie systemowe”</li>
+<li>M. Mitchell – „Linux. Programowanie dla zaawansowanych”</li>
+</ol>
 <br>
 <p>b) przydatne funkcje</p>
-fork(), setsid(), chdir(), exit(), signal(), kill(), openlog(), syslog(), closelog(),
+<p>fork(), setsid(), chdir(), exit(), signal(), kill(), openlog(), syslog(), closelog(),
 open(), read(), write(), close(), lseek(), mmap(), memcpy(), munmap(), strcmp(),
 strcpy(), strcat(), strtoul(), strstr(), strlen(), atoi(), stat(), opendir(), readdir(),
 closedir(), rewinddir(), remove(), unlink(), rmdir(), mkdir(), chmod(), access(),
-sleep()
+sleep()</p>
 <br>
 <p>c) użyteczne struktury i typy</p>
-struct stat, struct dirent, DIR, mode_t, off_t, time_t
+<p>struct stat, struct dirent, DIR, mode_t, off_t, time_t</p>
 <br>
 <p>d) wysyłanie sygnałów</p>
-Sygnał można wysłać za pomocą wywołania systemowego kill lub polecenia kill
-i podając żądany pid procesu.
+<p>Sygnał można wysłać za pomocą wywołania systemowego kill lub polecenia kill
+i podając żądany pid procesu.</p>
 <br>
 <p>e) inne</p>
-argumenty funkcji main() 
+<p>argumenty funkcji main() </p>
 
 
 
