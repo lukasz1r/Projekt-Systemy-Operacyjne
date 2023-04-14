@@ -6,9 +6,12 @@ Informacje ogólne
 sprawozdania w postaci pliku PDF.
 3. Sprawozdanie powinno zawierać:
 a) dane wykonawców projektu i prowadzącego zajęcia + treść zadania,
+
 b) opis poszczególnych modułów programu (funkcji i zmiennych globalnych),
+
 c) zrzuty ekranu działającego programu (demonstracja poszczególnych
 funkcjonalności),
+
 d) należy jasno opisać podział pracy. 
 <!-- Informacje ogólne
 
