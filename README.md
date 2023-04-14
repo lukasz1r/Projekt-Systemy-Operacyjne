@@ -5,12 +5,12 @@ Informacje ogólne
 <p>2. Odbiór projektu polega na dostarczeniu kodu źródłowego (z komentarzami) oraz
 sprawozdania w postaci pliku PDF.</p>
 <p>3. Sprawozdanie powinno zawierać:</p>
-<ul>
+<ol style="list-style-type: upper-latin;">
 <li>a) dane wykonawców projektu i prowadzącego zajęcia + treść zadania,</li>
 <li>b) opis poszczególnych modułów programu (funkcji i zmiennych globalnych),</li>
 <li>c) zrzuty ekranu działającego programu (demonstracja poszczególnych funkcjonalności),</li>
 <li>d) należy jasno opisać podział pracy.</li>
-
+</ol>
 
 
 
