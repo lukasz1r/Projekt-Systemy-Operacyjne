@@ -13,9 +13,10 @@ sprawozdania w postaci pliku PDF.</p>
 </ol>
 <hr>
 <br>
-<p>Temat 1 – Demon synchronizujący dwa podkatalogi
+<h2>Temat 1 – Demon synchronizujący dwa podkatalogi</h2>
 <hr>
-[12p.] Program który otrzymuje co najmniej dwa argumenty: ścieżkę źródłową
+
+<p>[12p.] Program który otrzymuje co najmniej dwa argumenty: ścieżkę źródłową
 oraz ścieżkę docelową . Jeżeli któraś ze ścieżek nie jest katalogiem program
 powraca natychmiast z komunikatem błędu. W przeciwnym wypadku staje się
 demonem. Demon wykonuje następujące czynności: śpi przez pięć minut (czas
@@ -33,23 +34,24 @@ usuwa ten plik z katalogu docelowego. Możliwe jest również natychmiastowe
 obudzenie się demona poprzez wysłanie mu sygnału SIGUSR1. Wyczerpująca
 informacja o każdej akcji typu uśpienie/obudzenie się demona (naturalne lub w
 wyniku sygnału), wykonanie kopii lub usunięcie pliku jest przesłana do logu
-systemowego. Informacja ta powinna zawierać aktualną datę.
+systemowego. Informacja ta powinna zawierać aktualną datę.</p>
+<br><br><hr>
+<p>Dodatkowo:</p>
 <br>
-Dodatkowo:
-a) [10p.] Dodatkowa opcja -R pozwalająca na rekurencyjną synchronizację
+<p>a) [10p.] Dodatkowa opcja -R pozwalająca na rekurencyjną synchronizację
 katalogów (teraz pozycje będące katalogami nie są ignorowane). W szczególności
 jeżeli demon stwierdzi w katalogu docelowym podkatalog którego brak w
-katalogu źródłowym powinien usunąć go wraz z zawartością.
+katalogu źródłowym powinien usunąć go wraz z zawartością.</p>
 <br>
-b) [12p.] W zależności od rozmiaru plików dla małych plików wykonywane jest
+<p>b) [12p.] W zależności od rozmiaru plików dla małych plików wykonywane jest
 kopiowanie przy pomocy read/write a w przypadku dużych przy pomocy
 mmap/write (plik źródłowy) zostaje zamapowany w całości w pamięci. Próg
 dzielący pliki małe od dużych może być przekazywany jako opcjonalny argument.
 Uwagi: (a) Wszelkie operacje na plikach należy wykonywać przy pomocy API
 Linuksa a nie standardowej biblioteki języka C (b) kopiowanie za każdym
-obudzeniem całego drzewa katalogów zostanie potraktowane jako poważny błąd
+obudzeniem całego drzewa katalogów zostanie potraktowane jako poważny błąd</p>
 <br>
-(c) podobnie jak przerzucenie części zadań na shell systemowy (funkcja system). </p>
+<p>(c) podobnie jak przerzucenie części zadań na shell systemowy (funkcja system). </p>
 
 
 
