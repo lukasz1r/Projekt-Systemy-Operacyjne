@@ -48,10 +48,10 @@ kopiowanie przy pomocy read/write a w przypadku dużych przy pomocy
 mmap/write (plik źródłowy) zostaje zamapowany w całości w pamięci. Próg
 dzielący pliki małe od dużych może być przekazywany jako opcjonalny argument.
 
-<p>Uwagi: 
+<p>Uwagi: <br>
 (a) Wszelkie operacje na plikach należy wykonywać przy pomocy API
-Linuksa a nie standardowej biblioteki języka C 
-(b) kopiowanie za każdymobudzeniem całego drzewa katalogów zostanie potraktowane jako poważny błąd
+Linuksa a nie standardowej biblioteki języka C <br>
+(b) kopiowanie za każdymobudzeniem całego drzewa katalogów zostanie potraktowane jako poważny błąd<br>
 (c) podobnie jak przerzucenie części zadań na shell systemowy (funkcja system). </p>
 <br><hr>
 
