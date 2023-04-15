@@ -47,11 +47,12 @@ katalogu źródłowym powinien usunąć go wraz z zawartością.</p>
 kopiowanie przy pomocy read/write a w przypadku dużych przy pomocy
 mmap/write (plik źródłowy) zostaje zamapowany w całości w pamięci. Próg
 dzielący pliki małe od dużych może być przekazywany jako opcjonalny argument.
-Uwagi: (a) Wszelkie operacje na plikach należy wykonywać przy pomocy API
-Linuksa a nie standardowej biblioteki języka C (b) kopiowanie za każdym
-obudzeniem całego drzewa katalogów zostanie potraktowane jako poważny błąd</p>
-<br>
-<p>(c) podobnie jak przerzucenie części zadań na shell systemowy (funkcja system). </p>
+
+<p>Uwagi: 
+(a) Wszelkie operacje na plikach należy wykonywać przy pomocy API
+Linuksa a nie standardowej biblioteki języka C 
+(b) kopiowanie za każdymobudzeniem całego drzewa katalogów zostanie potraktowane jako poważny błąd
+(c) podobnie jak przerzucenie części zadań na shell systemowy (funkcja system). </p>
 <br><hr>
 
 <h2>Projekt nr 1 – materiały pomocnicze</h2>
