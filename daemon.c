@@ -11,6 +11,21 @@
 #include <libgen.h>
 #include <time.h>
 
+void copyFiles(char *path_to_src, char *path_to_dest) {
+     // kopiowanie
+     char *buffer = (char*)malloc(16384);
+     int src_file = open(path_to_src, O_RDONLY);
+     int dest_file = open(path_to_dest, O_WRONLY | O_CREAT);
+     int bytes;
+
+     while((bytes = read(src_file, buffer, sizeof(buffer))) > 0) {
+          write(dest_file, buffer, bytes);
+     }
+     close(src_file);
+     close(dest_file);
+     free(buffer);
+}
+
 int main() {
      // zmienne przechowujące nazwy ścieżek - źródłowej i docelowej
      char src_path[] = "zrodlowy";
@@ -23,17 +38,16 @@ int main() {
      // petla sprawdzająca na bieżąco ścieżki
      // kończy się jeżeli w ścieżce jest plik lub gdy nie można pobrać informacji o pliku lub katalogu
      while (1) {
-          // sprawdzenie informacji o pliku lub katalogu
+          // jeżeli nie można pobrać info o ścieżkach to program kończy pracę
+          // jeżeli plik (0) to program kończy prace 
+          // jeżeli katalog (1) to program czeka podany czas (sleep_time) i zaczyna prace
           if (stat(src_path, &src_stat) == -1 || stat(dest_path, &dest_stat) == -1) {
                printf("Error: Failed to get stats\n");
                exit(1);
-          }
-          // sprawdzenie czy ścieżka ma typ katalogu lub pliku
-          // jeżeli katalog (1) to program czeka podany czas (sleep_time) i zaczyna prace
-          // jeżeli plik (0) to program kończy prace 
-          if (S_ISDIR(src_stat.st_mode) == 1 && S_ISDIR(dest_stat.st_mode) == 1) {
-
-               // czekanie
+          } else if (S_ISDIR(src_stat.st_mode) == 0 && S_ISDIR(dest_stat.st_mode) == 0) {
+               printf("Error: Given paths are not directories\n");
+               exit(1);
+          } else if (S_ISDIR(src_stat.st_mode) == 1 && S_ISDIR(dest_stat.st_mode) == 1) {
                sleep(sleep_time);
       
                // wskaźniki na struktury katalogów
@@ -76,23 +90,13 @@ int main() {
                               exists = true;
 
                               // zainicjalizowanie dat modyfikacji plików
-                              time_t mod_time_f1 = src_file_stat.st_mtime, mod_time_f2 = dest_file_stat.st_mtime;
+                              time_t src_file_mtime = src_file_stat.st_mtime, dest_file_mtime = dest_file_stat.st_mtime;
 
-                              if (difftime(mod_time_f1, mod_time_f2) > 0) {
+                              if (difftime(src_file_mtime, dest_file_mtime) > 0) {
                                    remove(path_to_dest);
 
-                                   // kopiowanie
-                                   char buffer[16384];
-                                   int src_file = open(path_to_src, O_RDONLY);
-                                   int dest_file = open(path_to_dest, O_WRONLY | O_CREAT);
-                                   int bytes;
-
-                                   while((bytes = read(src_file, buffer, sizeof(buffer))) > 0)
-                                   {
-                                        write(dest_file, buffer, bytes);
-                                   }
-                                   close(src_file);
-                                   close(dest_file);
+                                   // wywołanie funkcji kopiującej
+                                   copyFiles(path_to_src, path_to_dest);
                               } 
                               break;
                          }
@@ -101,24 +105,13 @@ int main() {
                     // jeżeli plik nie istnieje to jest kopiowany z 1 do 2 katalogu
                     if (exists == false && S_ISDIR(src_file_stat.st_mode) == 0) {
                          // bufory na ścieżki plików
-                         char path_to_src[128], path_to_dest[128]; 
+                         char path_to_dest[128]; 
 
                          // połączenie ścieżek w jeden string
-                         snprintf(path_to_src, sizeof(path_to_src), "%s/%s", src_path, src_file_info->d_name);
                          snprintf(path_to_dest, sizeof(path_to_dest), "%s/%s", dest_path, src_file_info->d_name);
 
-                         // kopiowanie
-                         char buffer[16384];
-                         int src_file = open(path_to_src, O_RDONLY);
-                         int dest_file = open(path_to_dest, O_WRONLY | O_CREAT);
-                         int bytes;
-
-                         while((bytes = read(src_file, buffer, sizeof(buffer))) > 0)
-                         {
-                              write(dest_file, buffer, bytes);
-                         }
-                         close(src_file);
-                         close(dest_file);
+                         // wywołanie funkcji kopiującej
+                         copyFiles(path_to_src, path_to_dest);
                     }
                     rewinddir(dest_dir);
                }
@@ -129,12 +122,7 @@ int main() {
                // zamknięcie katalogów
                closedir(src_dir);
                closedir(dest_dir);
-
-          } else if (S_ISDIR(src_stat.st_mode) == 0 && S_ISDIR(dest_stat.st_mode) == 0) {
-               printf("Error: Given paths are not directories\n");
-               exit(1);
           }
      }
-
      return 0;
 }
