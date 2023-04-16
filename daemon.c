@@ -25,7 +25,7 @@ void copyFiles(char *path_to_src, char *path_to_dest) {
      chmod(path_to_dest, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
      close(src_file);
      close(dest_file);
-     //free(buffer);
+     free(buffer);
 }
 
 int main() {
