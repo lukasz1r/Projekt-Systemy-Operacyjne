@@ -10,6 +10,7 @@
 #include <fcntl.h>
 #include <libgen.h>
 #include <time.h>
+#include <syslog.h>
 
 void copyFiles(char *path_to_src, char *path_to_dest) {
      // kopiowanie
@@ -21,19 +22,21 @@ void copyFiles(char *path_to_src, char *path_to_dest) {
      while((bytes = read(src_file, buffer, sizeof(buffer))) > 0) {
           write(dest_file, buffer, bytes);
      }
+     chmod(path_to_dest, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
      close(src_file);
      close(dest_file);
-     free(buffer);
+     //free(buffer);
 }
 
 int main() {
+
      // zmienne przechowujące nazwy ścieżek - źródłowej i docelowej
      char src_path[] = "zrodlowy";
      char dest_path[] = "docelowy";
 
      // utworzenie struktur, które będą zawierać info o typie plików w ścieżce
      struct stat src_stat, dest_stat;
-     int sleep_time = 0;
+     int sleep_time = 2;
 
      // petla sprawdzająca na bieżąco ścieżki
      // kończy się jeżeli w ścieżce jest plik lub gdy nie można pobrać informacji o pliku lub katalogu
@@ -116,13 +119,27 @@ int main() {
                     rewinddir(dest_dir);
                }
                rewinddir(src_dir);
+               rewinddir(dest_dir);
 
                // iteracja w drugą stronę, tj. porównanie plików z katalogu 2 z plikami z katalogu 1 i ew. usunięcie ich
+               while ((dest_file_info = readdir(dest_dir)) != NULL) {
+                    // inicjalizacja ścieżek plików w dwóch katalogach
+                    char path_to_src[128], path_to_dest[128];
+                    snprintf(path_to_src, sizeof(path_to_src), "%s/%s", src_path, dest_file_info->d_name);
+                    snprintf(path_to_dest, sizeof(path_to_dest), "%s/%s", dest_path, dest_file_info->d_name);
 
-               // zamknięcie katalogów
+                    // sprawdzenie, jest dostęp katalogu 2 i jednocześnie tego saemgo pliku w katalogu 1, jezeli nie - usuń
+                    if(access(path_to_dest, F_OK) == 0 && access(path_to_src, F_OK) != 0) {
+                         remove(path_to_dest);
+                    } else {
+                         continue;
+                    }
+               }
+               //zamknięcie katalogów
                closedir(src_dir);
                closedir(dest_dir);
           }
      }
+     closelog();
      return 0;
 }
