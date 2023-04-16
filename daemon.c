@@ -11,6 +11,7 @@
 #include <libgen.h>
 #include <time.h>
 #include <syslog.h>
+#include <signal.h>
 
 void copyFiles(char *path_to_src, char *path_to_dest) {
      // kopiowanie
@@ -25,18 +26,17 @@ void copyFiles(char *path_to_src, char *path_to_dest) {
      chmod(path_to_dest, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
      close(src_file);
      close(dest_file);
-     //free(buffer);
+     free(buffer);
 }
 
 int main() {
-
      // zmienne przechowujące nazwy ścieżek - źródłowej i docelowej
      char src_path[] = "zrodlowy";
      char dest_path[] = "docelowy";
 
      // utworzenie struktur, które będą zawierać info o typie plików w ścieżce
      struct stat src_stat, dest_stat;
-     int sleep_time = 2;
+     int sleep_time = 10;
 
      // petla sprawdzająca na bieżąco ścieżki
      // kończy się jeżeli w ścieżce jest plik lub gdy nie można pobrać informacji o pliku lub katalogu
@@ -62,84 +62,70 @@ int main() {
                // otworzenie katalogów
                src_dir = opendir(src_path);
                dest_dir = opendir(dest_path);
+               
+               // utworzenie procesu potomnego
+               pid_t process_pid = fork();
 
-               // iteracja przez pliki w katalogu źródłowym
-               while ((src_file_info = readdir(src_dir)) != NULL) {
-                    bool exists = false;
-
-                    //bufor na ścieżke pliku żródłowego
-                    char path_to_src[128];
-
-                    // zapisanie ścieżki w buforze
-                    snprintf(path_to_src, sizeof(path_to_src), "%s/%s", src_path, src_file_info->d_name);
-
-                    struct stat src_file_stat;
-                    stat(path_to_src, &src_file_stat);
-
-                    // iteracja przez pliki w katalogu docelowym
-                    while((dest_file_info = readdir(dest_dir)) != NULL) {
-                         //bufor na ścieżke pliku docelowego
-                         char path_to_dest[128];
-
-                         // zapisanie ścieżki w buforze
+               if (process_pid == 0) {
+                    // iteracja przez pliki w katalogu źródłowym
+                    while ((src_file_info = readdir(src_dir)) != NULL) {
+                         // inicjalizacja ścieżek plików w dwóch katalogach
+                         char path_to_src[128], path_to_dest[128];
+                         snprintf(path_to_src, sizeof(path_to_src), "%s/%s", src_path, src_file_info->d_name);
                          snprintf(path_to_dest, sizeof(path_to_dest), "%s/%s", dest_path, src_file_info->d_name);
 
-                         //struktury na informacje o pliku
-                         struct stat dest_file_stat;
+                         // struktury na informacje o pliku
+                         struct stat src_file_stat, dest_file_stat;
+                         stat(path_to_src, &src_file_stat);
                          stat(path_to_dest, &dest_file_stat);
 
-                         // porównanie nazw plików
-                         if (strcmp(src_file_info->d_name, dest_file_info->d_name) == 0) {
-                              exists = true;
-
-                              // zainicjalizowanie dat modyfikacji plików
-                              time_t src_file_mtime = src_file_stat.st_mtime, dest_file_mtime = dest_file_stat.st_mtime;
-
-                              if (difftime(src_file_mtime, dest_file_mtime) > 0) {
-                                   remove(path_to_dest);
-
-                                   // wywołanie funkcji kopiującej
+                         // jeżeli ścieżka jest plikiem 
+                         // sprawdzenie czy jest dostęp do pliku w katalogu 1 i jednocześnie tego samego pliku w katalogu 2, jezeli nie - skopiuj
+                         // jeżeli tak, sprawdź datę modyfikacji; jeżeli nowsza pliku w kat. 1 - usuń z kat. 2 ten plik i skopiuj z kat. źródłowego
+                         if (S_ISDIR(src_file_stat.st_mode) == 0) {
+                              if (access(path_to_src, F_OK) == 0 && access(path_to_dest, F_OK) != 0) {
                                    copyFiles(path_to_src, path_to_dest);
-                              } 
-                              break;
+                              } else if (access(path_to_src, F_OK) == 0 && access(path_to_dest, F_OK) == 0) {
+                                   // zainicjalizowanie dat modyfikacji plików
+                                   time_t src_file_mtime = src_file_stat.st_mtime, dest_file_mtime = dest_file_stat.st_mtime;
+                                   
+                                   if (difftime(src_file_mtime, dest_file_mtime) > 0) {
+                                        remove(path_to_dest);                 
+                                             // wywołanie funkcji kopiującej
+                                        copyFiles(path_to_src, path_to_dest);
+                                   } 
+                                   continue;
+                              }
                          }
                     }
-
-                    // jeżeli plik nie istnieje to jest kopiowany z 1 do 2 katalogu
-                    if (exists == false && S_ISDIR(src_file_stat.st_mode) == 0) {
-                         // bufory na ścieżki plików
-                         char path_to_dest[128]; 
-
-                         // połączenie ścieżek w jeden string
-                         snprintf(path_to_dest, sizeof(path_to_dest), "%s/%s", dest_path, src_file_info->d_name);
-
-                         // wywołanie funkcji kopiującej
-                         copyFiles(path_to_src, path_to_dest);
-                    }
-                    rewinddir(dest_dir);
+                    exit(0);
                }
-               rewinddir(src_dir);
-               rewinddir(dest_dir);
 
-               // iteracja w drugą stronę, tj. porównanie plików z katalogu 2 z plikami z katalogu 1 i ew. usunięcie ich
-               while ((dest_file_info = readdir(dest_dir)) != NULL) {
-                    // inicjalizacja ścieżek plików w dwóch katalogach
-                    char path_to_src[128], path_to_dest[128];
-                    snprintf(path_to_src, sizeof(path_to_src), "%s/%s", src_path, dest_file_info->d_name);
-                    snprintf(path_to_dest, sizeof(path_to_dest), "%s/%s", dest_path, dest_file_info->d_name);
+               // jeżeli proces bazowy
+               if (process_pid != 0) {
+                    // iteracja w drugą stronę, tj. porównanie plików z katalogu 2 z plikami z katalogu 1 i ew. usunięcie ich
+                    while ((dest_file_info = readdir(dest_dir)) != NULL) {
+                         // inicjalizacja ścieżek plików w dwóch katalogach
+                         char path_to_src[128], path_to_dest[128];
+                         snprintf(path_to_src, sizeof(path_to_src), "%s/%s", src_path, dest_file_info->d_name);
+                         snprintf(path_to_dest, sizeof(path_to_dest), "%s/%s", dest_path, dest_file_info->d_name);
 
-                    // sprawdzenie, jest dostęp katalogu 2 i jednocześnie tego saemgo pliku w katalogu 1, jezeli nie - usuń
-                    if(access(path_to_dest, F_OK) == 0 && access(path_to_src, F_OK) != 0) {
-                         remove(path_to_dest);
-                    } else {
-                         continue;
+                         // sprawdzenie, jest dostęp katalogu 2 i jednocześnie tego saemgo pliku w katalogu 1, jezeli nie - usuń
+                         if(access(path_to_dest, F_OK) == 0 && access(path_to_src, F_OK) != 0) {
+                              remove(path_to_dest);
+                         } else {
+                              continue;
+                         }
                     }
                }
+
+               // czekanie aż proces potomny zakończy pracę
+               wait(NULL);
+
                //zamknięcie katalogów
                closedir(src_dir);
                closedir(dest_dir);
           }
      }
-     closelog();
      return 0;
 }
