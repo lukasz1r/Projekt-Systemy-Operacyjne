@@ -39,38 +39,68 @@ int main() {
                //wskaźniki na struktury katalogów
                DIR *src_dir, *dest_dir;
                //utworzenie struktur dirent, które będą zawierać info o wszystkich plikach w katalogach
-               struct dirent *src_info, *dest_info;
+               struct dirent *src_file_info, *dest_file_info;
 
                //otworzenie katalogów
                src_dir = opendir(src_path);
                dest_dir = opendir(dest_path);
-
                //iteracja przez pliki w katalogu źródłowym
-               while ((src_info = readdir(src_dir)) != NULL) {
+               while ((src_file_info = readdir(src_dir)) != NULL) {
                     bool exists = false;
-                    //iteracja przez pliki w katalogu docelowym
-                    while((dest_info = readdir(dest_dir)) != NULL) {
-                         //porównanie nazw plików, jeżeli istnieją takie same pliki - zakańcza działanie 
-                         if (strcmp(src_info->d_name, dest_info->d_name) == true) {
-                              // struct stat src_file_stat, dest_file_stat;
-                              // stat(src_path, &src_stat);
-                              exists = true;
-                              break;
-                         }
-                    }
-                    //jeżeli plik nie istnieje to jest kopiowany z 1 do 2 katalogu
-                    if (exists == false) {
+                    // iteracja przez pliki w katalogu docelowym
+                    while((dest_file_info = readdir(dest_dir)) != NULL) {
+                         // pobranie informacji o plikach za pomocą stat()
                          char path_to_src[128], path_to_dest[128]; 
-                         //połączenie ścieżek w jeden string
+
                          strcpy(path_to_src, src_path);
                          strcat(path_to_src, "/");
-                         strcat(path_to_src, src_info->d_name);
+                         strcat(path_to_src, src_file_info->d_name);
 
                          strcpy(path_to_dest, dest_path);
                          strcat(path_to_dest, "/");
-                         strcat(path_to_dest, src_info->d_name);
+                         strcat(path_to_dest, dest_file_info->d_name);
 
-                         //zwykłe kopiowanie z jednej scieżki do drugiej
+                         struct stat src_file_stat, dest_file_stat;
+                         stat(path_to_src, &src_file_stat);
+                         stat(path_to_dest, &dest_file_stat);
+
+                         // porównanie nazw plików
+                         if (strcmp(src_file_info->d_name, dest_file_info->d_name) == 0) {
+                              exists = true;
+
+                              time_t mod_time_f1 = src_file_stat.st_mtime, mod_time_f2 = dest_file_stat.st_mtime;
+                              if (difftime(mod_time_f1, mod_time_f2) > 0) {
+                                   printf("rozni sie");
+                                   remove(path_to_dest);
+                                   char buffer[16384];
+                                   int src_file = open(path_to_src, O_RDONLY);
+                                   int dest_file = open(path_to_dest, O_WRONLY | O_CREAT);
+                                   int bytes;
+
+                                   while((bytes = read(src_file, buffer, sizeof(buffer))) > 0)
+                                   {
+                                        write(dest_file, buffer, bytes);
+                                   }
+                                   close(src_file);
+                                   close(dest_file);
+                              } 
+                              break;
+                         }
+                    }
+
+                    // jeżeli plik nie istnieje to jest kopiowany z 1 do 2 katalogu
+                    if (exists == false) {
+                         char path_to_src[128], path_to_dest[128]; 
+                         // połączenie ścieżek w jeden string
+                         strcpy(path_to_src, src_path);
+                         strcat(path_to_src, "/");
+                         strcat(path_to_src, src_file_info->d_name);
+
+                         strcpy(path_to_dest, dest_path);
+                         strcat(path_to_dest, "/");
+                         strcat(path_to_dest, src_file_info->d_name);
+
+                         // zwykłe kopiowanie z jednej scieżki do drugiej
                          char buffer[16384];
                          int src_file = open(path_to_src, O_RDONLY);
                          int dest_file = open(path_to_dest, O_WRONLY | O_CREAT);
@@ -82,13 +112,13 @@ int main() {
                          }
                          close(src_file);
                          close(dest_file);
-                         } else if (exists == true) {
-                              break;
-                         }
+                    }
+                    rewinddir(dest_dir);
                }
 
                //iteracja w drugą stronę, tj. porównanie plików z katalogu 2 z plikami z katalogu 1 i ew. usunięcie ich
 
+               //zamknięcie katalogów
                closedir(src_dir);
                closedir(dest_dir);
 
@@ -100,37 +130,3 @@ int main() {
 
      return 0;
 }
-
-
-
-
-
-
-                              // char path_to_src[128], path_to_dest[128]; 
-                              // //połączenie ścieżek w jeden string
-                              // strcpy(path_to_src, src_path);
-                              // strcat(path_to_src, "/");
-                              // strcat(path_to_src, src_info->d_name);
-
-                              // strcpy(path_to_dest, dest_path);
-                              // strcat(path_to_dest, "/");
-                              // strcat(path_to_dest, src_info->d_name);
-
-                              // struct stat src_file_stat, dest_file_stat;
-                              // stat(path_to_src, &src_file_stat);
-                              // stat(path_to_dest, &dest_file_stat);
-
-                              // if(difftime(src_file_stat.st_mtime, dest_file_stat.st_mtime) > 0) {
-                              //      //zwykłe kopiowanie z jednej scieżki do drugiej
-                              //      char buffer[16384];
-                              //      int src_file = open(path_to_src, O_RDONLY);
-                              //      int dest_file = open(path_to_dest, O_WRONLY | O_CREAT);
-                              //      int bytes;
-
-                              //      while((bytes = read(src_file, buffer, sizeof(buffer))) > 0)
-                              //      {
-                              //           write(dest_file, buffer, bytes);
-                              //      }
-                              //      close(src_file);
-                              //      close(dest_file);
-                              // }
