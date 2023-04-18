@@ -48,11 +48,50 @@ void copyFile(char *path_to_src, char *path_to_dest) {
 
      free(buffer);
 }
+
+void removeFiles(char *path_to_dest) {
+     DIR *dest_dir;
+     struct dirent *dest_path_info;
+
+     if ((dest_dir = opendir(path_to_dest)) == NULL) {
+          perror("open destination directory");
+          exit(1);
+     } 
+
+     while((dest_path_info = readdir(dest_dir)) != NULL) {
+          if (strcmp(dest_path_info->d_name, ".") == 0 || strcmp(dest_path_info->d_name, "..") == 0) {
+               continue;
+          }
+
+          char dest[128];
+          snprintf(dest, sizeof(dest), "%s/%s", path_to_dest, dest_path_info->d_name);
+
+          if (dest_path_info->d_type == DT_DIR) {
+               removeFiles(dest);
+               rmdir(dest);
+          }
+          else {
+               remove(dest);
+          }
+     }
+
+     if ((dest_dir = opendir(path_to_dest)) != NULL) {
+          while((dest_path_info = readdir(dest_dir)) != NULL) {
+               if (strcmp(dest_path_info->d_name, ".") != 0 && strcmp(dest_path_info->d_name, "..") != 0) {
+                    closedir(dest_dir);
+                    return;
+               }
+          }
+          closedir(dest_dir);
+          rmdir(path_to_dest);
+     }
+}
+
 void checkDirectory(char *src_path, char *dest_path) {
       
      DIR *src_dir, *dest_dir;
 
-     struct dirent *src_file_info, *dest_file_info;
+     struct dirent *src_path_info, *dest_path_info;
 
      if ((src_dir = opendir(src_path)) == NULL) {
           perror("open source directory");
@@ -62,26 +101,26 @@ void checkDirectory(char *src_path, char *dest_path) {
           exit(1);
      }
 
-     while ((src_file_info = readdir(src_dir)) != NULL) {
+     while ((src_path_info = readdir(src_dir)) != NULL) {
 
           char path_to_src[128], path_to_dest[128];
-          snprintf(path_to_src, sizeof(path_to_src), "%s/%s", src_path, src_file_info->d_name);
-          snprintf(path_to_dest, sizeof(path_to_dest), "%s/%s", dest_path, src_file_info->d_name);
+          snprintf(path_to_src, sizeof(path_to_src), "%s/%s", src_path, src_path_info->d_name);
+          snprintf(path_to_dest, sizeof(path_to_dest), "%s/%s", dest_path, src_path_info->d_name);
 
           struct stat src_file_stat, dest_file_stat;
           stat(path_to_src, &src_file_stat);
           stat(path_to_dest, &dest_file_stat);
 
-          if (S_ISDIR(src_file_stat.st_mode) == 1) {
+          if (src_path_info->d_type == DT_DIR /* && opcja -R*/) {
 
                if (access(path_to_dest, F_OK) != 0) {
                     mkdir(path_to_dest, src_file_stat.st_mode);
                }
-               if (strcmp(src_file_info->d_name, ".") != 0 && strcmp(src_file_info->d_name, "..") != 0) {
+               if (strcmp(src_path_info->d_name, ".") != 0 && strcmp(src_path_info->d_name, "..") != 0) {
                     checkDirectory(path_to_src, path_to_dest);
                }
 
-          } else if (S_ISDIR(src_file_stat.st_mode) == 0) {
+          } else if (src_path_info->d_type == DT_REG) {
                if (access(path_to_src, F_OK) == 0 && access(path_to_dest, F_OK) != 0) {
                     copyFile(path_to_src, path_to_dest);
                } else if (access(path_to_src, F_OK) == 0 && access(path_to_dest, F_OK) == 0) {
@@ -93,21 +132,23 @@ void checkDirectory(char *src_path, char *dest_path) {
 
                          copyFile(path_to_src, path_to_dest);
                     } 
-                    continue;
                }
           }
      }
 
-     while ((dest_file_info = readdir(dest_dir)) != NULL) {
+     while ((dest_path_info = readdir(dest_dir)) != NULL) {
 
           char path_to_src[128], path_to_dest[128];
-          snprintf(path_to_src, sizeof(path_to_src), "%s/%s", src_path, dest_file_info->d_name);
-          snprintf(path_to_dest, sizeof(path_to_dest), "%s/%s", dest_path, dest_file_info->d_name);
+          snprintf(path_to_src, sizeof(path_to_src), "%s/%s", src_path, dest_path_info->d_name);
+          snprintf(path_to_dest, sizeof(path_to_dest), "%s/%s", dest_path, dest_path_info->d_name);
 
           if(access(path_to_dest, F_OK) == 0 && access(path_to_src, F_OK) != 0) {
-               remove(path_to_dest);
-          } else {
-               continue;
+               if (dest_path_info->d_type == DT_REG) {
+                    remove(path_to_dest); 
+               } else if (dest_path_info->d_type == DT_DIR /* && opcja -R*/) {
+                    removeFiles(path_to_dest);        
+                    rmdir(path_to_dest);
+               }
           }
      }
 
