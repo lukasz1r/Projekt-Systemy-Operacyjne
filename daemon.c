@@ -22,6 +22,10 @@ void copyFile(char *path_to_src, char *path_to_dest) {
      int dest_file;
      int bytes;
 
+     openlog("DAEMON_COPY", LOG_PID | LOG_CONS, LOG_USER);
+     syslog(LOG_INFO, "Skopiowano plik: %s", path_to_src);
+     closelog();
+
      if ((src_file = open(path_to_src, O_RDONLY)) == -1) {
           perror("open first file");
           exit(1);
