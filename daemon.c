@@ -57,6 +57,10 @@ void removeFiles(char *path_to_dest) {
      DIR *dest_dir;
      struct dirent *dest_path_info;
 
+     openlog("DAEMON_DELETE", LOG_PID | LOG_CONS, LOG_USER);
+     syslog(LOG_INFO, "Usunieto plik: %s", path_to_dest);
+     closelog();
+
      if ((dest_dir = opendir(path_to_dest)) == NULL) {
           perror("open destination directory");
           exit(1);
@@ -73,6 +77,10 @@ void removeFiles(char *path_to_dest) {
           if (dest_path_info->d_type == DT_DIR) {
                removeFiles(dest);
                rmdir(dest);
+               openlog("DAEMON_DELETE", LOG_PID | LOG_CONS, LOG_USER);
+               syslog(LOG_INFO, "Usunieto plik: %s", path_to_dest);
+               closelog();
+
           }
           else {
                remove(dest);
@@ -96,6 +104,10 @@ void checkDirectory(char *src_path, char *dest_path) {
      DIR *src_dir, *dest_dir;
 
      struct dirent *src_path_info, *dest_path_info;
+
+     openlog("DAEMON_CHECK_DIR", LOG_PID | LOG_CONS, LOG_USER);
+     syslog(LOG_INFO, "Sprawdzono katalogi");
+     closelog();
 
      if ((src_dir = opendir(src_path)) == NULL) {
           perror("open source directory");
@@ -152,6 +164,10 @@ void checkDirectory(char *src_path, char *dest_path) {
                } else if (dest_path_info->d_type == DT_DIR /* && opcja -R*/) {
                     removeFiles(path_to_dest);        
                     rmdir(path_to_dest);
+                    openlog("DAEMON_DELETE", LOG_PID | LOG_CONS, LOG_USER);
+                    syslog(LOG_INFO, "Usunieto plik: %s", path_to_dest);
+                    closelog();
+
                }
           }
      }
