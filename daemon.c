@@ -197,10 +197,12 @@ void syncDirectory(char *src_path, char *dest_path)
      }
 }
 
-int main()
+int main(int argc, char* argv[])
 {
-     char src_path[] = "zrodlowy";
-     char dest_path[] = "docelowy";
+     char src_path[] = argv[1];
+     char dest_path[] = argv[2];
+     printf("DAEMON ROZPOCZYNA PRACE, KATALOG ZRODLOWY: %p, KATALOG DOCELOWY: %p", src_path, dest_path);
+
 
      struct stat src_stat, dest_stat;
      int sleep_time = 1;
