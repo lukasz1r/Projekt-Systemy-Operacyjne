@@ -250,7 +250,7 @@ int main(int argc, char* argv[])
           openlog("DAEMON_ERROR", LOG_PID | LOG_CONS, LOG_USER);
           syslog(LOG_INFO, "Proces demona nie moze byc uruchomiony");
           closelog();
-          exit(0);
+          exit(1);
      }
 
      umask(0);
@@ -262,7 +262,7 @@ int main(int argc, char* argv[])
           openlog("DAEMON_ERROR", LOG_PID | LOG_CONS, LOG_USER);
           syslog(LOG_INFO, "Nie udalo sie utworzyc nowej sesji");
           closelog();
-          exit(0);
+          exit(1);
      }
 
      if ((chdir("/")) < 0)
