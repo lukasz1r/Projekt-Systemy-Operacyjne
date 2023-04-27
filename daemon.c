@@ -16,20 +16,24 @@
 
 void copyFile(char *path_to_src, char *path_to_dest /*jakiś treshold dodać i w zależności od wielkości wybiera sposób kopiowania*/)
 {
-     char *buffer = malloc(1024);
+     char *buffer = (char*)malloc(1024);
      int src_file;
      int dest_file;
      int bytes;
 
      if ((src_file = open(path_to_src, O_RDONLY)) == -1)
      {
-          perror("Otwieranie pierwszego pliku");
+          openlog("DAEMON_ERROR", LOG_PID | LOG_CONS, LOG_USER);
+          syslog(LOG_INFO, "Blad podczas otwierania pliku zrodlowego: %s", path_to_src);
+          closelog();
           return;
      }
 
      if ((dest_file = open(path_to_dest, O_WRONLY | O_CREAT)) == -1)
      {
-          perror("Otwieranie drugiego pliku");
+          openlog("DAEMON_ERROR", LOG_PID | LOG_CONS, LOG_USER);
+          syslog(LOG_INFO, "Blad podczas otwierania pliku docelowego: %s", path_to_dest);
+          closelog();
           return;
      }
 
@@ -40,25 +44,33 @@ void copyFile(char *path_to_src, char *path_to_dest /*jakiś treshold dodać i w
 
      if (close(src_file) == -1)
      {
-          perror("Zamykanie pierwszego pliku");
+          openlog("DAEMON_ERROR", LOG_PID | LOG_CONS, LOG_USER);
+          syslog(LOG_INFO, "Blad podczas zamykania pliku zrodlowego: %s", path_to_src);
+          closelog();
           return;
      }
 
      if (close(dest_file) == -1)
      {
-          perror("Zamykanie drugiego pliku");
+          openlog("DAEMON_ERROR", LOG_PID | LOG_CONS, LOG_USER);
+          syslog(LOG_INFO, "Blad podczas zamykania pliku docelowego: %s", path_to_dest);
+          closelog();
           return;
      }
+
+     free(buffer);
 }
 
-void removeFiles(char *path_to_dest)
+void clearDirectory(char *path_to_dest)
 {
      DIR *dest_dir;
      struct dirent *dest_path_info;
 
      if ((dest_dir = opendir(path_to_dest)) == NULL)
      {
-          perror("Otwieranie katalogu docelowego");
+          openlog("DAEMON_ERROR", LOG_PID | LOG_CONS, LOG_USER);
+          syslog(LOG_INFO, "Blad podczas otwierania katalogu: %s", path_to_dest);
+          closelog();
           return;
      }
 
@@ -69,22 +81,23 @@ void removeFiles(char *path_to_dest)
                continue;
           }
 
-          char dest[128];
-          snprintf(dest, sizeof(dest), "%s/%s", path_to_dest, dest_path_info->d_name);
+          char sub_dir[257];
+          snprintf(sub_dir, sizeof(sub_dir), "%s/%s", path_to_dest, dest_path_info->d_name);
 
           if (dest_path_info->d_type == DT_DIR)
           {
-               removeFiles(dest);
-               rmdir(dest);
+               clearDirectory(sub_dir);
+               rmdir(sub_dir);
                openlog("DAEMON_DELETE", LOG_PID | LOG_CONS, LOG_USER);
-               syslog(LOG_INFO, "Usunieto katalog: %s", dest);
+               syslog(LOG_INFO, "Usunieto katalog: %s", sub_dir);
                closelog();
           }
+
           else if (dest_path_info->d_type == DT_REG)
           {
-               remove(dest);
+               remove(sub_dir);
                openlog("DAEMON_DELETE", LOG_PID | LOG_CONS, LOG_USER);
-               syslog(LOG_INFO, "Usunieto plik: %s", dest);
+               syslog(LOG_INFO, "Usunieto plik: %s", sub_dir);
                closelog();
           }
      }
@@ -97,23 +110,27 @@ void syncDirectory(char *src_path, char *dest_path)
 
      if ((src_dir = opendir(src_path)) == NULL)
      {
-          perror("Otwieranie katalogu zrodlowego");
+          openlog("DAEMON_ERROR", LOG_PID | LOG_CONS, LOG_USER);
+          syslog(LOG_INFO, "Blad podczas otwierania katalogu zrodlowego: %s", src_path);
+          closelog();
           return;
      }
 
      if ((dest_dir = opendir(dest_path)) == NULL)
      {
-          perror("Otwieranie katalogu docelowego");
+          openlog("DAEMON_ERROR", LOG_PID | LOG_CONS, LOG_USER);
+          syslog(LOG_INFO, "Blad podczas otwierania katalogu docelowego: %s", dest_path);
+          closelog();
           return;
      }
 
      openlog("DAEMON_CHECK_DIR", LOG_PID | LOG_CONS, LOG_USER);
-     syslog(LOG_INFO, "Sprawdzono katalogi");
+     syslog(LOG_INFO, "Sprawdzono poprawnosc katalogow");
      closelog();
 
      while ((src_path_info = readdir(src_dir)) != NULL)
      {
-          char path_to_src[128], path_to_dest[128];
+          char path_to_src[257], path_to_dest[257];
           snprintf(path_to_src, sizeof(path_to_src), "%s/%s", src_path, src_path_info->d_name);
           snprintf(path_to_dest, sizeof(path_to_dest), "%s/%s", dest_path, src_path_info->d_name);
 
@@ -126,6 +143,9 @@ void syncDirectory(char *src_path, char *dest_path)
                if (access(path_to_dest, F_OK) != 0)
                {
                     mkdir(path_to_dest, src_path_stat.st_mode);
+                    openlog("DAEMON_MKDIR", LOG_PID | LOG_CONS, LOG_USER);
+                    syslog(LOG_INFO, "Utworzono nowy katalog w folderze docelowym: %s", path_to_dest);
+                    closelog();
                }
 
                if (strcmp(src_path_info->d_name, ".") != 0 && strcmp(src_path_info->d_name, "..") != 0)
@@ -133,6 +153,7 @@ void syncDirectory(char *src_path, char *dest_path)
                     syncDirectory(path_to_src, path_to_dest);
                }
           }
+
           else if (src_path_info->d_type == DT_REG)
           {
                if (access(path_to_src, F_OK) == 0 && access(path_to_dest, F_OK) != 0)
@@ -142,6 +163,7 @@ void syncDirectory(char *src_path, char *dest_path)
                     syslog(LOG_INFO, "Skopiowano plik: %s", path_to_src);
                     closelog();
                }
+
                else if (access(path_to_src, F_OK) == 0 && access(path_to_dest, F_OK) == 0)
                {
                     time_t src_file_mtime = src_path_stat.st_mtime, dest_file_mtime = dest_path_stat.st_mtime;
@@ -149,7 +171,7 @@ void syncDirectory(char *src_path, char *dest_path)
                     if (difftime(src_file_mtime, dest_file_mtime) > 0 || src_path_stat.st_size != dest_path_stat.st_size)
                     {
                          remove(path_to_dest);
-                         copyFile(path_to_src, path_to_dest /*src_path_stat.st_size (treshold)*/);
+                         copyFile(path_to_src, path_to_dest /*, src_path_stat.st_size (treshold)*/);
                          openlog("DAEMON_COPY", LOG_PID | LOG_CONS, LOG_USER);
                          syslog(LOG_INFO, "Zaktualizowano plik: %s", path_to_dest);
                          closelog();
@@ -160,7 +182,7 @@ void syncDirectory(char *src_path, char *dest_path)
 
      while ((dest_path_info = readdir(dest_dir)) != NULL)
      {
-          char path_to_src[128], path_to_dest[128];
+          char path_to_src[257], path_to_dest[257];
           snprintf(path_to_src, sizeof(path_to_src), "%s/%s", src_path, dest_path_info->d_name);
           snprintf(path_to_dest, sizeof(path_to_dest), "%s/%s", dest_path, dest_path_info->d_name);
 
@@ -173,9 +195,10 @@ void syncDirectory(char *src_path, char *dest_path)
                     syslog(LOG_INFO, "Usunieto plik: %s", path_to_dest);
                     closelog();
                }
+
                else if (dest_path_info->d_type == DT_DIR /* && opcja -R*/)
                {
-                    removeFiles(path_to_dest);
+                    clearDirectory(path_to_dest);
                     rmdir(path_to_dest);
                     openlog("DAEMON_DELETE", LOG_PID | LOG_CONS, LOG_USER);
                     syslog(LOG_INFO, "Usunieto katalog: %s", path_to_dest);
@@ -186,44 +209,99 @@ void syncDirectory(char *src_path, char *dest_path)
 
      if (closedir(src_dir) == -1)
      {
-          perror("Zamykanie katalogu zrodlowego");
+          openlog("DAEMON_ERROR", LOG_PID | LOG_CONS, LOG_USER);
+          syslog(LOG_INFO, "Blad podczas zamykania katalogu zrodlowego: %s", src_path);
+          closelog();
           return;
      }
 
      if (closedir(dest_dir) == -1)
      {
-          perror("Zamykanie katalogu docelowego");
+          openlog("DAEMON_ERROR", LOG_PID | LOG_CONS, LOG_USER);
+          syslog(LOG_INFO, "Blad podczas zamykania katalogu docelowego: %s", dest_path);
+          closelog();
           return;
      }
 }
 
 int main(int argc, char* argv[])
 {
-     char src_path[] = argv[1];
-     char dest_path[] = argv[2];
-     printf("DAEMON ROZPOCZYNA PRACE, KATALOG ZRODLOWY: %p, KATALOG DOCELOWY: %p", src_path, dest_path);
+     char *src_path = argv[1];
+     char *dest_path = argv[2];
 
+     printf("DAEMON ROZPOCZYNA PRACE \nKATALOG ZRODLOWY: %s, KATALOG DOCELOWY: %s\n", src_path, dest_path);
+
+     pid_t pid, sid;
+
+     pid = fork();
+
+     printf("PID PROCESU: %d\n", pid);
+
+     if (pid < 0)
+     {
+          openlog("DAEMON_ERROR", LOG_PID | LOG_CONS, LOG_USER);
+          syslog(LOG_INFO, "Nie udalo sie utworzyc procesu potomnego");
+          closelog();
+          exit(1);
+     }
+
+     if (pid > 0)
+     {
+          openlog("DAEMON_ERROR", LOG_PID | LOG_CONS, LOG_USER);
+          syslog(LOG_INFO, "Proces demona nie moze byc uruchomiony");
+          closelog();
+          exit(0);
+     }
+
+     umask(0);
+
+     sid = setsid();
+
+     if (sid < 0)
+     {
+          openlog("DAEMON_ERROR", LOG_PID | LOG_CONS, LOG_USER);
+          syslog(LOG_INFO, "Nie udalo sie utworzyc nowej sesji");
+          closelog();
+          exit(0);
+     }
+
+     if ((chdir("/")) < 0)
+     {
+          openlog("DAEMON_ERROR", LOG_PID | LOG_CONS, LOG_USER);
+          syslog(LOG_INFO, "Nie udalo sie zmienic katalogu na root");
+          closelog();
+          exit(1);
+     }
+
+     close(STDIN_FILENO);
+     close(STDOUT_FILENO);
+     close(STDERR_FILENO);
 
      struct stat src_stat, dest_stat;
-     int sleep_time = 1;
+     int sleep_time = 1; //potem zmienic na 300s
 
      while (1)
      {
           sleep(sleep_time);
           if (stat(src_path, &src_stat) == -1 || stat(dest_path, &dest_stat) == -1)
-          {
-               perror("Pobranie informacji o sciezce\n");
-               continue;
+          {   
+               openlog("DAEMON_ERROR", LOG_PID | LOG_CONS, LOG_USER);
+               syslog(LOG_INFO, "Blad podczas pobierania informacji o sciezkach: %s; %s", src_path, dest_path);
+               closelog();
+               exit(1);
           }
-          else if (S_ISDIR(src_stat.st_mode) == 0 && S_ISDIR(dest_stat.st_mode) == 0)
+          else if (S_ISDIR(src_stat.st_mode) == 0 || S_ISDIR(dest_stat.st_mode) == 0)
           {
-               perror("Sprawdzenie poprawnosci katalogow\n");
-               continue;
+               openlog("DAEMON_ERROR", LOG_PID | LOG_CONS, LOG_USER);
+               syslog(LOG_INFO, "Sciezki katalogow nie sa poprawne: %s; %s", src_path, dest_path);
+               closelog();
+               exit(1);
           }
           else if (S_ISDIR(src_stat.st_mode) == 1 && S_ISDIR(dest_stat.st_mode) == 1)
           {
                syncDirectory(src_path, dest_path);
           }
      }
-     return 0;
+
+     exit(0);
 }
