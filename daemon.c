@@ -238,7 +238,7 @@ int main(int argc, char* argv[])
      if (pid < 0)
      {
           openlog("DAEMON_ERROR", LOG_PID | LOG_CONS, LOG_USER);
-          syslog(LOG_INFO, "Nie udalo sie utworzyc procesu potomnego");
+          syslog(LOG_INFO, "Nie udalo sie utworzyc procesu demona");
           closelog();
           exit(1);
      }
@@ -287,14 +287,14 @@ int main(int argc, char* argv[])
                openlog("DAEMON_ERROR", LOG_PID | LOG_CONS, LOG_USER);
                syslog(LOG_INFO, "Blad podczas pobierania informacji o sciezkach: %s; %s", src_path, dest_path);
                closelog();
-               exit(0);
+               exit(1);
           }
           else if (S_ISDIR(src_stat.st_mode) == 0 || S_ISDIR(dest_stat.st_mode) == 0)
           {
                openlog("DAEMON_ERROR", LOG_PID | LOG_CONS, LOG_USER);
                syslog(LOG_INFO, "Sciezki katalogow nie sa poprawne: %s; %s", src_path, dest_path);
                closelog();
-               exit(0);
+               exit(1);
           }
           else if (S_ISDIR(src_stat.st_mode) == 1 && S_ISDIR(dest_stat.st_mode) == 1)
           {
