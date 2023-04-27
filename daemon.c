@@ -235,8 +235,6 @@ int main(int argc, char* argv[])
 
      pid = fork();
 
-     printf("PID PROCESU: %d\n", pid);
-
      if (pid < 0)
      {
           openlog("DAEMON_ERROR", LOG_PID | LOG_CONS, LOG_USER);
@@ -247,10 +245,11 @@ int main(int argc, char* argv[])
 
      if (pid > 0)
      {
-          openlog("DAEMON_ERROR", LOG_PID | LOG_CONS, LOG_USER);
-          syslog(LOG_INFO, "Proces demona nie moze byc uruchomiony");
+          printf("PID PROCESU: %d\n", pid);
+          openlog("DAEMON_RUN", LOG_PID | LOG_CONS, LOG_USER);
+          syslog(LOG_INFO, "Proces demona został uruchomiony");
           closelog();
-          exit(1);
+          exit(0);
      }
 
      umask(0);
@@ -288,14 +287,14 @@ int main(int argc, char* argv[])
                openlog("DAEMON_ERROR", LOG_PID | LOG_CONS, LOG_USER);
                syslog(LOG_INFO, "Blad podczas pobierania informacji o sciezkach: %s; %s", src_path, dest_path);
                closelog();
-               exit(1);
+               exit(0);
           }
           else if (S_ISDIR(src_stat.st_mode) == 0 || S_ISDIR(dest_stat.st_mode) == 0)
           {
                openlog("DAEMON_ERROR", LOG_PID | LOG_CONS, LOG_USER);
                syslog(LOG_INFO, "Sciezki katalogow nie sa poprawne: %s; %s", src_path, dest_path);
                closelog();
-               exit(1);
+               exit(0);
           }
           else if (S_ISDIR(src_stat.st_mode) == 1 && S_ISDIR(dest_stat.st_mode) == 1)
           {
