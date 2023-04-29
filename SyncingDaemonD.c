@@ -629,8 +629,14 @@ int main(int argc, char *argv[])
                // jeżeli podane ścieżki to katalogi
                else if (S_ISDIR(src_stat.st_mode) == 1 && S_ISDIR(dest_stat.st_mode) == 1)
                {
+                    // ignorowanie sygnałów podczas pracy demona
+                    signal(SIGUSR1, SIG_IGN);
+                    
                     // rozpoczęcie pracy demona
                     syncDirectory(src_path, dest_path);
+                    
+                    // wznowienie obsługi sygnałów
+                    signal(SIGUSR1, signalHandler);
                }
 
                // po zakończeniu pracy - ustawienie licznika sekund z powrotem na 1 oraz wyłączenie wymuszonego budzenia
