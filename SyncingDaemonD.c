@@ -563,7 +563,7 @@ int main(int argc, char *argv[])
           exit(0);
      }
 
-     // nadanie wszystki praw dla tworzonych plików
+     // nadanie wszystkich praw dla tworzonych plików
      umask(0);
 
      // utworzenie nowej sesji
