@@ -491,7 +491,7 @@ int main(int argc, char *argv[])
      int sleep_time = 300;
      
      // zmienna do liczenia sekund
-     int seconds = 0;
+     int seconds = 1;
 
      // zmienna przechowująca ostatni argument z lini poleceń
      int option;
@@ -633,8 +633,8 @@ int main(int argc, char *argv[])
                     syncDirectory(src_path, dest_path);
                }
 
-               // po zakończeniu pracy - ustawienie licznika sekund z powrotem na 0 oraz wyłączenie wymuszonego budzenia
-               seconds = 0;
+               // po zakończeniu pracy - ustawienie licznika sekund z powrotem na 1 oraz wyłączenie wymuszonego budzenia
+               seconds = 1;
                forced_sync = false;
 
                // wysłanie informacji o uspaniu demona do logu systemowego
