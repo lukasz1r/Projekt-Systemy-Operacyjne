@@ -633,7 +633,7 @@ int main(int argc, char *argv[])
                     syncDirectory(src_path, dest_path);
                }
 
-               // po zakończeniu pracy - ustawienie licznika sekund z powrotem na 0 oraz wyłączenie rekurencyjnej synchronizacji katalogów
+               // po zakończeniu pracy - ustawienie licznika sekund z powrotem na 0 oraz wyłączenie wymuszonego budzenia
                seconds = 0;
                forced_sync = false;
 
