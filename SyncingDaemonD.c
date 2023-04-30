@@ -579,15 +579,7 @@ int main(int argc, char *argv[])
           exit(1);
      }
 
-     // zmiana katalogu na "root" 
-     if ((chdir("/")) < 0)
-     {    
-          // wysłanie informacji do logu o niepowodzeniu zmiany katalogu na katalog "root" (jeżeli chdir() zwróci -1)
-          openlog("DAEMON_ERROR", LOG_PID | LOG_CONS, LOG_USER);
-          syslog(LOG_INFO, "Nie udalo sie zmienic katalogu na root");
-          closelog();
-          exit(1);
-     }
+    
 
      // utworzenie struktur, które będą przechowywać informację o podanych na wejściu ścieżkach 
      struct stat src_stat, dest_stat;
